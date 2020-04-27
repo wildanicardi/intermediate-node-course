@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const port = 8000;
 const app = express();
 
@@ -36,12 +37,40 @@ function sendResponse(res, err, data) {
     });
   }
 }
+//login
+app.post("/auth/login", async (req, res) => {});
+// register
+app.post("/auth/signup", async (req, res) => {
+  try {
+    const hashedPassword = await bcrypt.hash(req.body.newData.password, 10);
+
+    const user = await User.create({
+      ...req.body.newData,
+      password: hashedPassword,
+    });
+    console.log(user);
+    const payload = {
+      user: {
+        id: user.id,
+      },
+    };
+    const token = jwt.sign(payload, process.env.ACCESS_TOKEN);
+    res.json({
+      success: true,
+      token: token,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error,
+    });
+  }
+});
 // CREATE
 app.post("/users", async (req, res) => {
   const hashedPassword = await bcrypt.hash(req.body.newData.password, 10);
 
-  await User.create(
-    {
+  await User.create({
       ...req.body.newData,
       password: hashedPassword,
     },
@@ -50,7 +79,11 @@ app.post("/users", async (req, res) => {
     }
   );
 });
-
+app.get('/users', async (req, res) => {
+  await User.find({}, (err, data) => {
+    sendResponse(res, err, data);
+  });
+})
 app
   .route("/users/:id")
   // READ
@@ -62,11 +95,9 @@ app
   // UPDATE
   .put(async (req, res) => {
     await User.findByIdAndUpdate(
-      req.params.id,
-      {
+      req.params.id, {
         ...req.body.newData,
-      },
-      {
+      }, {
         new: true,
       },
       (err, data) => {
