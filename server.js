@@ -17,7 +17,18 @@ mongoose.connect("mongodb://localhost/userData", {
   useUnifiedTopology: true,
   useCreateIndex: true,
 });
-
+// generate token
+const signToken = (user) => {
+  return jwt.sign(
+    {
+      iss: "Intermediete",
+      sub: user.id,
+      iat: new Date().getTime(), // current time
+      exp: new Date().setDate(new Date().getDate() + 1), // current time + 1 day ahead
+    },
+    "intermedieteauthentication"
+  );
+};
 // response function
 function sendResponse(res, err, data) {
   if (err) {
@@ -43,21 +54,24 @@ app.post("/auth/login", async (req, res) => {});
 app.post("/auth/signup", async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.newData.password, 10);
-
-    const user = await User.create({
-      ...req.body.newData,
+    const { email, name } = req.body.newData;
+    //cek email
+    const emailFund = await User.findOne({
+      email,
+    });
+    if (emailFund) {
+      res.json({ message: "Email is already in use" });
+    }
+    const newUser = new User({
+      email,
+      name,
       password: hashedPassword,
     });
-    console.log(user);
-    const payload = {
-      user: {
-        id: user.id,
-      },
-    };
-    const token = jwt.sign(payload, process.env.ACCESS_TOKEN);
+    await newUser.save();
+    const token = signToken(newUser);
     res.json({
       success: true,
-      token: token,
+      access_token: token,
     });
   } catch (error) {
     res.json({
@@ -70,7 +84,8 @@ app.post("/auth/signup", async (req, res) => {
 app.post("/users", async (req, res) => {
   const hashedPassword = await bcrypt.hash(req.body.newData.password, 10);
 
-  await User.create({
+  await User.create(
+    {
       ...req.body.newData,
       password: hashedPassword,
     },
@@ -79,11 +94,11 @@ app.post("/users", async (req, res) => {
     }
   );
 });
-app.get('/users', async (req, res) => {
+app.get("/users", async (req, res) => {
   await User.find({}, (err, data) => {
     sendResponse(res, err, data);
   });
-})
+});
 app
   .route("/users/:id")
   // READ
@@ -95,9 +110,11 @@ app
   // UPDATE
   .put(async (req, res) => {
     await User.findByIdAndUpdate(
-      req.params.id, {
+      req.params.id,
+      {
         ...req.body.newData,
-      }, {
+      },
+      {
         new: true,
       },
       (err, data) => {
