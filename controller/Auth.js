@@ -1,33 +1,39 @@
-const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const {
+  JWT_SECRET
+} = require('../configuration/index');
 // generate token
 const signToken = (user) => {
-  return jwt.sign(
-    {
+  return jwt.sign({
       iss: "Intermediete",
       sub: user.id,
       iat: new Date().getTime(), // current time
       exp: new Date().setDate(new Date().getDate() + 1), // current time + 1 day ahead
     },
-    "intermedieteauthentication"
+    JWT_SECRET
   );
 };
 exports.signup = async (req, res) => {
   try {
-    const hashedPassword = await bcrypt.hash(req.body.newData.password, 10);
-    const { email, name } = req.body.newData;
+    const {
+      email,
+      name,
+      password
+    } = req.body.newData;
     //cek email
     const emailFund = await User.findOne({
       email,
     });
     if (emailFund) {
-      res.json({ message: "Email is already in use" });
+      res.json({
+        message: "Email is already in use"
+      });
     }
     const newUser = new User({
       email,
       name,
-      password: hashedPassword,
+      password
     });
     await newUser.save();
     const token = signToken(newUser);
@@ -40,6 +46,8 @@ exports.signup = async (req, res) => {
       success: false,
       message: error,
     });
+    // console.log(error);
+
   }
 }
 exports.login = async (req, res) => {}

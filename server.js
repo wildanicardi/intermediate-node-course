@@ -24,14 +24,17 @@ mongoose.connect("mongodb://localhost/userData", {
   useUnifiedTopology: true,
   useCreateIndex: true,
 });
-
+const passport = require('passport');
+const passportConf = require('./passport');
 //login
 app.post("/auth/login", login);
 // register
 app.post("/auth/signup", signup);
 // CREATE
 app.post("/users", createUser);
-app.get("/users", index);
+app.get("/users", passport.authenticate('jwt', {
+  session: false
+}), index);
 app
   .route("/users/:id")
   // READ
