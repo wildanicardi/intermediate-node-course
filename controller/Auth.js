@@ -50,4 +50,19 @@ exports.signup = async (req, res) => {
 
   }
 }
-exports.login = async (req, res) => {}
+exports.login = async (req, res) => {
+  try {
+    const token = signToken(req.user);
+    res.json({
+      success: true,
+      access_token: token,
+    });
+  } catch (error) {
+    // res.json({
+    //   success: false,
+    //   message: error,
+    // });
+    console.log(error);
+  }
+
+}

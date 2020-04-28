@@ -26,15 +26,19 @@ mongoose.connect("mongodb://localhost/userData", {
 });
 const passport = require('passport');
 const passportConf = require('./passport');
+const passportLogin = passport.authenticate('local', {
+  session: false
+});
+const passportJwt = passport.authenticate('jwt', {
+  session: false
+});
 //login
-app.post("/auth/login", login);
+app.post("/auth/login", passportLogin, login);
 // register
 app.post("/auth/signup", signup);
 // CREATE
 app.post("/users", createUser);
-app.get("/users", passport.authenticate('jwt', {
-  session: false
-}), index);
+app.get("/users", passportJwt, index);
 app
   .route("/users/:id")
   // READ
