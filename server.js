@@ -23,7 +23,7 @@ mongoose.connect("mongodb://localhost/userData", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true,
-});
+}).then(() => console.log("MongoDB Connected")).catch((err) => console.log(err));
 const passport = require('passport');
 const passportConf = require('./passport');
 const passportLogin = passport.authenticate('local', {
@@ -42,8 +42,8 @@ app.get("/users", passportJwt, index);
 app
   .route("/users/:id")
   // READ
-  .get(showUser)
+  .get(passportJwt, showUser)
   // UPDATE
-  .put(updateUser)
+  .put(passportJwt, updateUser)
   // DELETE
-  .delete(deleteUser);
+  .delete(passportJwt, deleteUser);
