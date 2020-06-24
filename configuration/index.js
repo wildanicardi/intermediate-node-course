@@ -1,3 +1,3 @@
 module.exports= {
-  JWT_SECRET:"intermedieteauthentication"
+  JWT_SECRET:"intermedieteauthentication",
 }
